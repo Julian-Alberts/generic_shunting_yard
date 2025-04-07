@@ -5,8 +5,6 @@
 
 //! A generic Shunting yard algorithm implementation
 
-use std::fmt::Debug;
-
 pub mod op;
 
 /// All valid input tokens
@@ -54,7 +52,34 @@ pub trait Operator {
 }
 
 /// Convert a infix expression into a postfix expression.
-pub fn to_postfix<V, F, O>(
+/// If the input is malformed the result is undefined.
+/// Example:
+///
+/// ```rust
+/// use generic_shunting_yard::*;
+/// // 5 + 2 * sin(123)
+/// let infix = [
+///     InputToken::Value(5),
+///     InputToken::Operator(op::math::MathOperator::Add),
+///     InputToken::Value(2),
+///     InputToken::Operator(op::math::MathOperator::Mul),
+///     InputToken::Function("sin"),
+///     InputToken::LeftParen,
+///     InputToken::Value(123),
+///     InputToken::RightParen,
+/// ];
+/// let postfix = unsafe { to_postfix_unchecked(infix) };
+/// assert_eq!(postfix, vec![
+///     OutputToken::Value(5),
+///     OutputToken::Value(2),
+///     OutputToken::Value(123),
+///     OutputToken::Function("sin"),
+///     OutputToken::Operator(op::math::MathOperator::Mul),
+///     OutputToken::Operator(op::math::MathOperator::Add),
+/// ])
+/// ```
+///
+pub unsafe fn to_postfix_unchecked<V, F, O>(
     infix: impl IntoIterator<Item = InputToken<V, F, O>>,
 ) -> Vec<OutputToken<V, F, O>>
 where
@@ -121,21 +146,25 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{to_postfix, InputToken, OutputToken};
+    use crate::{to_postfix_unchecked, InputToken, OutputToken};
 
     #[test]
     fn value_only() {
-        let post_fix = to_postfix([InputToken::<_, (), crate::op::math::MathOperator>::Value(1)]);
+        let post_fix = unsafe {
+            to_postfix_unchecked([InputToken::<_, (), crate::op::math::MathOperator>::Value(1)])
+        };
         assert_eq!(post_fix, vec![OutputToken::Value(1)]);
     }
 
     #[test]
     fn simple_addition() {
-        let post_fix = to_postfix::<_, (), _>([
-            InputToken::Value(1),
-            InputToken::Operator(crate::op::math::MathOperator::Add),
-            InputToken::Value(2),
-        ]);
+        let post_fix = unsafe {
+            to_postfix_unchecked::<_, (), _>([
+                InputToken::Value(1),
+                InputToken::Operator(crate::op::math::MathOperator::Add),
+                InputToken::Value(2),
+            ])
+        };
         assert_eq!(
             post_fix,
             vec![
@@ -149,13 +178,15 @@ mod tests {
     #[test]
     fn precedence_0() {
         use crate::op::math::MathOperator;
-        let post_fix = to_postfix::<_, (), _>([
-            InputToken::Value(1),
-            InputToken::Operator(MathOperator::Mul),
-            InputToken::Value(2),
-            InputToken::Operator(MathOperator::Add),
-            InputToken::Value(3),
-        ]);
+        let post_fix = unsafe {
+            to_postfix_unchecked::<_, (), _>([
+                InputToken::Value(1),
+                InputToken::Operator(MathOperator::Mul),
+                InputToken::Value(2),
+                InputToken::Operator(MathOperator::Add),
+                InputToken::Value(3),
+            ])
+        };
         assert_eq!(
             post_fix,
             vec![
@@ -171,13 +202,15 @@ mod tests {
     #[test]
     fn precedence_1() {
         use crate::op::math::MathOperator;
-        let post_fix = to_postfix::<_, (), _>([
-            InputToken::Value(1),
-            InputToken::Operator(MathOperator::Add),
-            InputToken::Value(2),
-            InputToken::Operator(MathOperator::Mul),
-            InputToken::Value(3),
-        ]);
+        let post_fix = unsafe {
+            to_postfix_unchecked::<_, (), _>([
+                InputToken::Value(1),
+                InputToken::Operator(MathOperator::Add),
+                InputToken::Value(2),
+                InputToken::Operator(MathOperator::Mul),
+                InputToken::Value(3),
+            ])
+        };
         assert_eq!(
             post_fix,
             vec![
@@ -193,21 +226,23 @@ mod tests {
     #[test]
     fn wikipedia_example() {
         use crate::op::math::MathOperator;
-        let post_fix = to_postfix([
-            InputToken::Function("sin"),
-            InputToken::LeftParen,
-            InputToken::Function("max"),
-            InputToken::LeftParen,
-            InputToken::Value(2),
-            InputToken::ArgSeperator,
-            InputToken::Value(3),
-            InputToken::RightParen,
-            InputToken::Operator(MathOperator::Div),
-            InputToken::Value(3),
-            InputToken::Operator(MathOperator::Mul),
-            InputToken::Value(4),
-            InputToken::RightParen,
-        ]);
+        let post_fix = unsafe {
+            to_postfix_unchecked([
+                InputToken::Function("sin"),
+                InputToken::LeftParen,
+                InputToken::Function("max"),
+                InputToken::LeftParen,
+                InputToken::Value(2),
+                InputToken::ArgSeperator,
+                InputToken::Value(3),
+                InputToken::RightParen,
+                InputToken::Operator(MathOperator::Div),
+                InputToken::Value(3),
+                InputToken::Operator(MathOperator::Mul),
+                InputToken::Value(4),
+                InputToken::RightParen,
+            ])
+        };
         assert_eq!(
             post_fix,
             vec![
