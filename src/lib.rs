@@ -53,6 +53,13 @@ pub trait Operator {
 
 /// Convert a infix expression into a postfix expression.
 /// If the input is malformed the result is undefined.
+///
+/// Safety:
+/// Expressions must start with a LeftParen, Value or Function
+/// Functions must be followed by LeftParen with a argument list and end with RightParen.
+/// Function arguments must be seperated using a ArgSeperator.
+/// Values, Functions and RightParen can be followed by Operator
+///
 /// Example:
 ///
 /// ```rust
@@ -135,7 +142,7 @@ where
     }
     for token in stack.into_iter().rev() {
         let out = match token {
-            StackToken::LeftParen => todo!(),
+            StackToken::LeftParen => break,
             StackToken::Function(func) => OutputToken::Function(func),
             StackToken::Operator(o) => OutputToken::Operator(o),
         };
