@@ -60,9 +60,9 @@ pub trait Operator {
 /// // 5 + 2 * sin(123)
 /// let infix = [
 ///     InputToken::Value(5),
-///     InputToken::Operator(op::math::MathOperator::Add),
+///     InputToken::Operator(op::Math::Add),
 ///     InputToken::Value(2),
-///     InputToken::Operator(op::math::MathOperator::Mul),
+///     InputToken::Operator(op::Math::Mul),
 ///     InputToken::Function("sin"),
 ///     InputToken::LeftParen,
 ///     InputToken::Value(123),
@@ -74,9 +74,9 @@ pub trait Operator {
 ///     OutputToken::Value(2),
 ///     OutputToken::Value(123),
 ///     OutputToken::Function("sin"),
-///     OutputToken::Operator(op::math::MathOperator::Mul),
-///     OutputToken::Operator(op::math::MathOperator::Add),
-/// ])
+///     OutputToken::Operator(op::Math::Mul),
+///     OutputToken::Operator(op::Math::Add),
+/// ]);
 /// ```
 ///
 pub unsafe fn to_postfix_unchecked<V, F, O>(
@@ -146,13 +146,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{to_postfix_unchecked, InputToken, OutputToken};
+    use crate::{op::Math, to_postfix_unchecked, InputToken, OutputToken};
 
     #[test]
     fn value_only() {
-        let post_fix = unsafe {
-            to_postfix_unchecked([InputToken::<_, (), crate::op::math::MathOperator>::Value(1)])
-        };
+        let post_fix = unsafe { to_postfix_unchecked([InputToken::<_, (), Math>::Value(1)]) };
         assert_eq!(post_fix, vec![OutputToken::Value(1)]);
     }
 
@@ -161,7 +159,7 @@ mod tests {
         let post_fix = unsafe {
             to_postfix_unchecked::<_, (), _>([
                 InputToken::Value(1),
-                InputToken::Operator(crate::op::math::MathOperator::Add),
+                InputToken::Operator(Math::Add),
                 InputToken::Value(2),
             ])
         };
@@ -170,20 +168,19 @@ mod tests {
             vec![
                 OutputToken::Value(1),
                 OutputToken::Value(2),
-                OutputToken::Operator(crate::op::math::MathOperator::Add)
+                OutputToken::Operator(Math::Add)
             ]
         );
     }
 
     #[test]
     fn precedence_0() {
-        use crate::op::math::MathOperator;
         let post_fix = unsafe {
             to_postfix_unchecked::<_, (), _>([
                 InputToken::Value(1),
-                InputToken::Operator(MathOperator::Mul),
+                InputToken::Operator(Math::Mul),
                 InputToken::Value(2),
-                InputToken::Operator(MathOperator::Add),
+                InputToken::Operator(Math::Add),
                 InputToken::Value(3),
             ])
         };
@@ -192,22 +189,21 @@ mod tests {
             vec![
                 OutputToken::Value(1),
                 OutputToken::Value(2),
-                OutputToken::Operator(MathOperator::Mul),
+                OutputToken::Operator(Math::Mul),
                 OutputToken::Value(3),
-                OutputToken::Operator(MathOperator::Add)
+                OutputToken::Operator(Math::Add)
             ]
         )
     }
 
     #[test]
     fn precedence_1() {
-        use crate::op::math::MathOperator;
         let post_fix = unsafe {
             to_postfix_unchecked::<_, (), _>([
                 InputToken::Value(1),
-                InputToken::Operator(MathOperator::Add),
+                InputToken::Operator(Math::Add),
                 InputToken::Value(2),
-                InputToken::Operator(MathOperator::Mul),
+                InputToken::Operator(Math::Mul),
                 InputToken::Value(3),
             ])
         };
@@ -217,15 +213,14 @@ mod tests {
                 OutputToken::Value(1),
                 OutputToken::Value(2),
                 OutputToken::Value(3),
-                OutputToken::Operator(MathOperator::Mul),
-                OutputToken::Operator(MathOperator::Add)
+                OutputToken::Operator(Math::Mul),
+                OutputToken::Operator(Math::Add)
             ]
         )
     }
 
     #[test]
     fn wikipedia_example() {
-        use crate::op::math::MathOperator;
         let post_fix = unsafe {
             to_postfix_unchecked([
                 InputToken::Function("sin"),
@@ -236,9 +231,9 @@ mod tests {
                 InputToken::ArgSeperator,
                 InputToken::Value(3),
                 InputToken::RightParen,
-                InputToken::Operator(MathOperator::Div),
+                InputToken::Operator(Math::Div),
                 InputToken::Value(3),
-                InputToken::Operator(MathOperator::Mul),
+                InputToken::Operator(Math::Mul),
                 InputToken::Value(4),
                 InputToken::RightParen,
             ])
@@ -250,9 +245,9 @@ mod tests {
                 OutputToken::Value(3),
                 OutputToken::Function("max"),
                 OutputToken::Value(3),
-                OutputToken::Operator(MathOperator::Div),
+                OutputToken::Operator(Math::Div),
                 OutputToken::Value(4),
-                OutputToken::Operator(MathOperator::Mul),
+                OutputToken::Operator(Math::Mul),
                 OutputToken::Function("sin"),
             ]
         )
