@@ -4,7 +4,7 @@
 #![warn(missing_docs)]
 
 //! A generic Shunting yard algorithm implementation
-
+#[cfg(any(feature = "basic_operators", test))]
 pub mod op;
 
 /// All valid input tokens
@@ -146,7 +146,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{op::Math, to_postfix_unchecked, InputToken, OutputToken};
+    use crate::{InputToken, OutputToken, op::Math, to_postfix_unchecked};
 
     #[test]
     fn value_only() {
