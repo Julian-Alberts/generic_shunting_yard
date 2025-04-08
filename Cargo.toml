@@ -2,6 +2,12 @@
 name = "generic_shunting_yard"
 version = "0.1.0"
 edition = "2024"
+keywords = ["rpn", "shunting yard"]
+categories = ["algorithms"]
+authors = ["Julian Alberts"]
+description = "A generic shunting yard algorithm implementation"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Julian-Alberts/generic_shunting_yard"
 
 [dependencies]
 
