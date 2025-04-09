@@ -12,6 +12,6 @@ repository = "https://github.com/Julian-Alberts/generic_shunting_yard"
 [dependencies]
 
 [features]
-default = [ ]
+default = [ "basic_operators" ]
 basic_operators = []
 

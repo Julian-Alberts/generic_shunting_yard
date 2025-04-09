@@ -4,9 +4,8 @@
 #![warn(missing_docs)]
 
 //! A generic Shunting yard algorithm implementation
-#[cfg(any(feature = "basic_operators", test))]
 pub mod op;
-
+pub mod validate;
 /// All valid input tokens
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InputToken<V, F, O> {
@@ -63,13 +62,13 @@ pub trait Operator {
 /// Example:
 ///
 /// ```rust
-/// use generic_shunting_yard::*;
+/// use generic_shunting_yard::{InputToken, OutputToken, op::Math, to_postfix_unchecked};
 /// // 5 + 2 * sin(123)
 /// let infix = [
 ///     InputToken::Value(5),
-///     InputToken::Operator(op::Math::Add),
+///     InputToken::Operator(Math::Add),
 ///     InputToken::Value(2),
-///     InputToken::Operator(op::Math::Mul),
+///     InputToken::Operator(Math::Mul),
 ///     InputToken::Function("sin"),
 ///     InputToken::LeftParen,
 ///     InputToken::Value(123),
@@ -81,8 +80,8 @@ pub trait Operator {
 ///     OutputToken::Value(2),
 ///     OutputToken::Value(123),
 ///     OutputToken::Function("sin"),
-///     OutputToken::Operator(op::Math::Mul),
-///     OutputToken::Operator(op::Math::Add),
+///     OutputToken::Operator(Math::Mul),
+///     OutputToken::Operator(Math::Add),
 /// ]);
 /// ```
 ///
@@ -153,7 +152,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{InputToken, OutputToken, op::Math, to_postfix_unchecked};
+    use crate::{InputToken, OutputToken, op::Math, to_postfix_unchecked, validate};
 
     #[test]
     fn value_only() {
