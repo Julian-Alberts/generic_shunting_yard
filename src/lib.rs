@@ -49,9 +49,23 @@ pub trait Operator {
     fn is_left_associative(&self) -> bool;
 }
 
-#[derive(Debug, PartialEq)]
+/// This error is returned if the parentheses inside a expression do not match.
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct ParenMissmatchError {
     pos: usize,
+}
+
+impl ParenMissmatchError {
+    /// The error position
+    pub fn pos(&self) -> usize {
+        self.pos
+    }
+}
+
+impl std::fmt::Display for ParenMissmatchError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Unexpected parenthese at position {}", self.pos)
+    }
 }
 
 /// Convert a infix expression into a postfix expression.
@@ -111,6 +125,8 @@ where
                 paren_count -= 1;
                 while let Some(StackToken::Operator(_)) = stack.last() {
                     let Some(StackToken::Operator(op)) = stack.pop() else {
+                        // SAFETY:
+                        // This has been checked in the while condition
                         unsafe { std::hint::unreachable_unchecked() }
                     };
                     out_queue.push(OutputToken::Operator(op))
@@ -118,6 +134,8 @@ where
                 stack.pop();
                 if let Some(StackToken::Function(_)) = stack.last() {
                     let Some(StackToken::Function(func)) = stack.pop() else {
+                        // SAFETY:
+                        // This has been checked in the if condition
                         unsafe { std::hint::unreachable_unchecked() }
                     };
                     out_queue.push(OutputToken::Function(func));
@@ -127,6 +145,8 @@ where
             InputToken::ArgSeperator => {
                 while let Some(StackToken::Operator(_)) = stack.last() {
                     let Some(StackToken::Operator(o)) = stack.pop() else {
+                        // SAFETY:
+                        // This has been checked in the while condition
                         unsafe { std::hint::unreachable_unchecked() }
                     };
                     out_queue.push(OutputToken::Operator(o))
@@ -138,6 +158,8 @@ where
                         || (o1.precedence() == o2.precedence() && o1.is_left_associative())
                     {
                         let Some(StackToken::Operator(o2)) = stack.pop() else {
+                            // SAFETY:
+                            // This has been checked in the while condition
                             unsafe { std::hint::unreachable_unchecked() }
                         };
                         out_queue.push(OutputToken::Operator(o2))
