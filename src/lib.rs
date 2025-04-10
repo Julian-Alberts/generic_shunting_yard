@@ -5,7 +5,6 @@
 
 //! A generic Shunting yard algorithm implementation
 pub mod op;
-pub mod validate;
 /// All valid input tokens
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InputToken<V, F, O> {
