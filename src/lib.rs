@@ -25,7 +25,7 @@ pub enum InputToken<V, F, O> {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 enum StackToken<F, O> {
-    LeftParen,
+    LeftParen(usize),
     Function(F),
     Operator(O),
 }
@@ -50,6 +50,11 @@ pub trait Operator {
     fn is_left_associative(&self) -> bool;
 }
 
+#[derive(Debug, PartialEq)]
+pub struct ParenMissmatchError {
+    pos: usize,
+}
+
 /// Convert a infix expression into a postfix expression.
 /// If the input is malformed the result is undefined.
 ///
@@ -62,7 +67,7 @@ pub trait Operator {
 /// Example:
 ///
 /// ```rust
-/// use generic_shunting_yard::{InputToken, OutputToken, op::Math, to_postfix_unchecked};
+/// use generic_shunting_yard::{InputToken, OutputToken, op::Math, to_postfix};
 /// // 5 + 2 * sin(123)
 /// let infix = [
 ///     InputToken::Value(5),
@@ -74,31 +79,37 @@ pub trait Operator {
 ///     InputToken::Value(123),
 ///     InputToken::RightParen,
 /// ];
-/// let postfix = unsafe { to_postfix_unchecked(infix) };
-/// assert_eq!(postfix, vec![
+/// let postfix = to_postfix(infix);
+/// assert_eq!(postfix, Ok(vec![
 ///     OutputToken::Value(5),
 ///     OutputToken::Value(2),
 ///     OutputToken::Value(123),
 ///     OutputToken::Function("sin"),
 ///     OutputToken::Operator(Math::Mul),
 ///     OutputToken::Operator(Math::Add),
-/// ]);
+/// ]));
 /// ```
 ///
-pub unsafe fn to_postfix_unchecked<V, F, O>(
+pub fn to_postfix<V, F, O>(
     infix: impl IntoIterator<Item = InputToken<V, F, O>>,
-) -> Vec<OutputToken<V, F, O>>
+) -> Result<Vec<OutputToken<V, F, O>>, ParenMissmatchError>
 where
     O: Operator,
 {
     let mut out_queue: Vec<OutputToken<V, F, O>> = Vec::new();
     let mut stack: Vec<StackToken<F, O>> = Vec::new();
+    let mut paren_count: isize = 0;
 
-    for token in infix.into_iter() {
+    for (pos, token) in infix.into_iter().enumerate() {
         match token {
             InputToken::Value(value) => out_queue.push(OutputToken::Value(value)),
-            InputToken::LeftParen => stack.push(StackToken::LeftParen),
+            InputToken::LeftParen => {
+                paren_count += 1;
+                stack.push(StackToken::LeftParen(pos))
+            }
+            InputToken::RightParen if paren_count == 0 => return Err(ParenMissmatchError { pos }),
             InputToken::RightParen => {
+                paren_count -= 1;
                 while let Some(StackToken::Operator(_)) = stack.last() {
                     let Some(StackToken::Operator(op)) = stack.pop() else {
                         unsafe { std::hint::unreachable_unchecked() }
@@ -141,29 +152,32 @@ where
     }
     for token in stack.into_iter().rev() {
         let out = match token {
-            StackToken::LeftParen => break,
+            StackToken::LeftParen(pos) => return Err(ParenMissmatchError { pos }),
             StackToken::Function(func) => OutputToken::Function(func),
             StackToken::Operator(o) => OutputToken::Operator(o),
         };
         out_queue.push(out);
     }
-    out_queue
+    Ok(out_queue)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{InputToken, OutputToken, op::Math, to_postfix_unchecked, validate};
+    use crate::{
+        op::{Logical, Math},
+        to_postfix, InputToken, OutputToken,
+    };
 
     #[test]
     fn value_only() {
-        let post_fix = unsafe { to_postfix_unchecked([InputToken::<_, (), Math>::Value(1)]) };
-        assert_eq!(post_fix, vec![OutputToken::Value(1)]);
+        let post_fix = unsafe { to_postfix([InputToken::<_, (), Math>::Value(1)]) };
+        assert_eq!(post_fix, Ok(vec![OutputToken::Value(1)]));
     }
 
     #[test]
     fn simple_addition() {
         let post_fix = unsafe {
-            to_postfix_unchecked::<_, (), _>([
+            to_postfix::<_, (), _>([
                 InputToken::Value(1),
                 InputToken::Operator(Math::Add),
                 InputToken::Value(2),
@@ -171,18 +185,18 @@ mod tests {
         };
         assert_eq!(
             post_fix,
-            vec![
+            Ok(vec![
                 OutputToken::Value(1),
                 OutputToken::Value(2),
                 OutputToken::Operator(Math::Add)
-            ]
+            ])
         );
     }
 
     #[test]
     fn precedence_0() {
         let post_fix = unsafe {
-            to_postfix_unchecked::<_, (), _>([
+            to_postfix::<_, (), _>([
                 InputToken::Value(1),
                 InputToken::Operator(Math::Mul),
                 InputToken::Value(2),
@@ -192,20 +206,20 @@ mod tests {
         };
         assert_eq!(
             post_fix,
-            vec![
+            Ok(vec![
                 OutputToken::Value(1),
                 OutputToken::Value(2),
                 OutputToken::Operator(Math::Mul),
                 OutputToken::Value(3),
                 OutputToken::Operator(Math::Add)
-            ]
+            ])
         )
     }
 
     #[test]
     fn precedence_1() {
         let post_fix = unsafe {
-            to_postfix_unchecked::<_, (), _>([
+            to_postfix::<_, (), _>([
                 InputToken::Value(1),
                 InputToken::Operator(Math::Add),
                 InputToken::Value(2),
@@ -215,20 +229,20 @@ mod tests {
         };
         assert_eq!(
             post_fix,
-            vec![
+            Ok(vec![
                 OutputToken::Value(1),
                 OutputToken::Value(2),
                 OutputToken::Value(3),
                 OutputToken::Operator(Math::Mul),
                 OutputToken::Operator(Math::Add)
-            ]
+            ])
         )
     }
 
     #[test]
     fn wikipedia_example() {
         let post_fix = unsafe {
-            to_postfix_unchecked([
+            to_postfix([
                 InputToken::Function("sin"),
                 InputToken::LeftParen,
                 InputToken::Function("max"),
@@ -246,7 +260,7 @@ mod tests {
         };
         assert_eq!(
             post_fix,
-            vec![
+            Ok(vec![
                 OutputToken::Value(2),
                 OutputToken::Value(3),
                 OutputToken::Function("max"),
@@ -255,7 +269,150 @@ mod tests {
                 OutputToken::Value(4),
                 OutputToken::Operator(Math::Mul),
                 OutputToken::Function("sin"),
-            ]
+            ])
         )
+    }
+
+    #[test]
+    fn unary_operator_1() {
+        // ! true
+        let postfix = unsafe {
+            to_postfix([
+                InputToken::<_, (), _>::Operator(Logical::Not),
+                InputToken::Value(true),
+            ])
+        };
+        assert_eq!(
+            postfix,
+            Ok(vec![
+                OutputToken::Value(true),
+                OutputToken::Operator(Logical::Not)
+            ])
+        )
+    }
+
+    #[test]
+    fn unexpected_closing_paren() {
+        let postfix = unsafe {
+            to_postfix([
+                InputToken::Value(false),
+                InputToken::RightParen,
+                InputToken::Operator(Logical::And),
+                InputToken::<_, (), _>::Operator(Logical::Not),
+                InputToken::Value(true),
+            ])
+        };
+        assert_eq!(postfix, Err(crate::ParenMissmatchError { pos: 1 }))
+    }
+
+    #[test]
+    fn missing_closing_paren() {
+        let postfix = unsafe {
+            to_postfix([
+                InputToken::Value(false),
+                InputToken::LeftParen,
+                InputToken::Operator(Logical::And),
+                InputToken::<_, (), _>::Operator(Logical::Not),
+                InputToken::Value(true),
+            ])
+        };
+        assert_eq!(postfix, Err(crate::ParenMissmatchError { pos: 1 }))
+    }
+
+    #[test]
+    fn unary_operator_2() {
+        // false && ! true
+        let postfix = unsafe {
+            to_postfix([
+                InputToken::Value(false),
+                InputToken::Operator(Logical::And),
+                InputToken::<_, (), _>::Operator(Logical::Not),
+                InputToken::Value(true),
+            ])
+        };
+        assert_eq!(
+            postfix,
+            Ok(vec![
+                OutputToken::Value(false),
+                OutputToken::Value(true),
+                OutputToken::Operator(Logical::Not),
+                OutputToken::Operator(Logical::And),
+            ])
+        )
+    }
+
+    #[test]
+    fn function_call_without_paren() {
+        let postfix1 = unsafe {
+            to_postfix([
+                InputToken::<_, _, Math>::Function("fn"),
+                InputToken::Value(1),
+            ])
+        };
+        let postfix2 = unsafe {
+            to_postfix([
+                InputToken::Function("fn"),
+                InputToken::LeftParen,
+                InputToken::Value(1),
+                InputToken::RightParen,
+            ])
+        };
+        assert_eq!(postfix1, postfix2);
+    }
+
+    #[test]
+    fn function_call_without_paren_multi_arg() {
+        let postfix1 = unsafe {
+            to_postfix([
+                InputToken::<_, _, Math>::Function("fn"),
+                InputToken::Value(1),
+                InputToken::ArgSeperator,
+                InputToken::Value(2),
+                InputToken::Operator(Math::Add),
+                InputToken::Value(2),
+            ])
+        };
+        let postfix2 = unsafe {
+            to_postfix([
+                InputToken::Function("fn"),
+                InputToken::LeftParen,
+                InputToken::Value(1),
+                InputToken::ArgSeperator,
+                InputToken::Value(2),
+                InputToken::Operator(Math::Add),
+                InputToken::Value(2),
+                InputToken::RightParen,
+            ])
+        };
+        assert_eq!(postfix1, postfix2);
+    }
+
+    #[test]
+    fn function_call_without_paren_multi_arg_following_op() {
+        // fn 1 , 2 + 2 == fn ( 1 , 2 + 2 )
+        let postfix1 = unsafe {
+            to_postfix([
+                InputToken::<_, _, Math>::Function("fn"),
+                InputToken::Value(1),
+                InputToken::ArgSeperator,
+                InputToken::Value(2),
+                InputToken::Operator(Math::Add),
+                InputToken::Value(2),
+            ])
+        };
+        // fn ( 1 , 2 ) + 2
+        let postfix2 = unsafe {
+            to_postfix([
+                InputToken::Function("fn"),
+                InputToken::LeftParen,
+                InputToken::Value(1),
+                InputToken::ArgSeperator,
+                InputToken::Value(2),
+                InputToken::RightParen,
+                InputToken::Operator(Math::Add),
+                InputToken::Value(2),
+            ])
+        };
+        assert_ne!(postfix1, postfix2);
     }
 }

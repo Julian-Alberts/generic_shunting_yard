@@ -64,6 +64,7 @@ pub enum Logical {
     Xor,
     And,
     Or,
+    Not,
 }
 
 /// All predefined operators
@@ -90,6 +91,7 @@ new_op!(Logical {
     Xor => (6,true),
     And => (4, true),
     Or => (3, true),
+    Not => (14, false),
 } into All::Logical);
 
 #[cfg(test)]
