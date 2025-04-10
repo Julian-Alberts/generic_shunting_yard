@@ -1,9 +1,38 @@
+//! A generic Shunting yard algorithm implementation
+//! This crate only provides the shunting yard algorithm.
+//! You need to write your own parser and convert its result to `InputToken`s
+//! The types for values, functions and operators are generic. Operators must implement the
+//! `Operator` trait.
+//!
+//! This crate contains definitions for some operators in the `op` module.
+//!
+//! ```rust
+//! use generic_shunting_yard::{InputToken, OutputToken, op::Math, to_postfix};
+//! // 5 + 2 * sin(123)
+//! let infix = [
+//!     InputToken::Value(5),
+//!     InputToken::Operator(Math::Add),
+//!     InputToken::Value(2),
+//!     InputToken::Operator(Math::Mul),
+//!     InputToken::Function("sin"),
+//!     InputToken::LeftParen,
+//!     InputToken::Value(123),
+//!     InputToken::RightParen,
+//! ];
+//! let postfix = to_postfix(infix);
+//! assert_eq!(postfix, Ok(vec![
+//!     OutputToken::Value(5),
+//!     OutputToken::Value(2),
+//!     OutputToken::Value(123),
+//!     OutputToken::Function("sin"),
+//!     OutputToken::Operator(Math::Mul),
+//!     OutputToken::Operator(Math::Add),
+//! ]));
 #![warn(clippy::undocumented_unsafe_blocks)]
 #![warn(clippy::unnecessary_safety_doc)]
 #![warn(clippy::missing_safety_doc)]
 #![warn(missing_docs)]
 
-//! A generic Shunting yard algorithm implementation
 pub mod op;
 /// All valid input tokens
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -69,14 +98,8 @@ impl std::fmt::Display for ParenMissmatchError {
 }
 
 /// Convert a infix expression into a postfix expression.
-/// If the input is malformed the result is undefined.
-///
-/// Safety:
-/// Expressions must start with a LeftParen, Value or Function
-/// Functions must be followed by LeftParen with a argument list and end with RightParen.
-/// Function arguments must be seperated using a ArgSeperator.
-/// Values, Functions and RightParen can be followed by Operator
-///
+/// It is highly recomended to wrap function arguments in parentheses as the result may be
+/// unexpected otherwise.
 /// Example:
 ///
 /// ```rust
@@ -191,19 +214,17 @@ mod tests {
 
     #[test]
     fn value_only() {
-        let post_fix = unsafe { to_postfix([InputToken::<_, (), Math>::Value(1)]) };
+        let post_fix = to_postfix([InputToken::<_, (), Math>::Value(1)]);
         assert_eq!(post_fix, Ok(vec![OutputToken::Value(1)]));
     }
 
     #[test]
     fn simple_addition() {
-        let post_fix = unsafe {
-            to_postfix::<_, (), _>([
-                InputToken::Value(1),
-                InputToken::Operator(Math::Add),
-                InputToken::Value(2),
-            ])
-        };
+        let post_fix = to_postfix::<_, (), _>([
+            InputToken::Value(1),
+            InputToken::Operator(Math::Add),
+            InputToken::Value(2),
+        ]);
         assert_eq!(
             post_fix,
             Ok(vec![
@@ -216,15 +237,13 @@ mod tests {
 
     #[test]
     fn precedence_0() {
-        let post_fix = unsafe {
-            to_postfix::<_, (), _>([
-                InputToken::Value(1),
-                InputToken::Operator(Math::Mul),
-                InputToken::Value(2),
-                InputToken::Operator(Math::Add),
-                InputToken::Value(3),
-            ])
-        };
+        let post_fix = to_postfix::<_, (), _>([
+            InputToken::Value(1),
+            InputToken::Operator(Math::Mul),
+            InputToken::Value(2),
+            InputToken::Operator(Math::Add),
+            InputToken::Value(3),
+        ]);
         assert_eq!(
             post_fix,
             Ok(vec![
@@ -262,23 +281,21 @@ mod tests {
 
     #[test]
     fn wikipedia_example() {
-        let post_fix = unsafe {
-            to_postfix([
-                InputToken::Function("sin"),
-                InputToken::LeftParen,
-                InputToken::Function("max"),
-                InputToken::LeftParen,
-                InputToken::Value(2),
-                InputToken::ArgSeperator,
-                InputToken::Value(3),
-                InputToken::RightParen,
-                InputToken::Operator(Math::Div),
-                InputToken::Value(3),
-                InputToken::Operator(Math::Mul),
-                InputToken::Value(4),
-                InputToken::RightParen,
-            ])
-        };
+        let post_fix = to_postfix([
+            InputToken::Function("sin"),
+            InputToken::LeftParen,
+            InputToken::Function("max"),
+            InputToken::LeftParen,
+            InputToken::Value(2),
+            InputToken::ArgSeperator,
+            InputToken::Value(3),
+            InputToken::RightParen,
+            InputToken::Operator(Math::Div),
+            InputToken::Value(3),
+            InputToken::Operator(Math::Mul),
+            InputToken::Value(4),
+            InputToken::RightParen,
+        ]);
         assert_eq!(
             post_fix,
             Ok(vec![
