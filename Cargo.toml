@@ -1,5 +1,5 @@
 [package]
-name = "generic_shunting_yard"
+name = "gyard"
 version = "0.1.0"
 edition = "2021"
 keywords = ["rpn", "shunting yard"]

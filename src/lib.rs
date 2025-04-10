@@ -7,7 +7,7 @@
 //! This crate contains definitions for some operators in the `op` module.
 //!
 //! ```rust
-//! use generic_shunting_yard::{InputToken, OutputToken, op::Math, to_postfix};
+//! use gyard::{InputToken, OutputToken, op::Math, to_postfix};
 //! // 5 + 2 * sin(123)
 //! let infix = [
 //!     InputToken::Value(5),
@@ -28,6 +28,7 @@
 //!     OutputToken::Operator(Math::Mul),
 //!     OutputToken::Operator(Math::Add),
 //! ]));
+//! ```
 #![warn(clippy::undocumented_unsafe_blocks)]
 #![warn(clippy::unnecessary_safety_doc)]
 #![warn(clippy::missing_safety_doc)]
@@ -103,7 +104,7 @@ impl std::fmt::Display for ParenMissmatchError {
 /// Example:
 ///
 /// ```rust
-/// use generic_shunting_yard::{InputToken, OutputToken, op::Math, to_postfix};
+/// use gyard::{InputToken, OutputToken, op::Math, to_postfix};
 /// // 5 + 2 * sin(123)
 /// let infix = [
 ///     InputToken::Value(5),
