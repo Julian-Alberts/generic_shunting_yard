@@ -2,7 +2,7 @@
 name = "gyard"
 version = "0.1.0"
 edition = "2021"
-keywords = ["rpn", "shunting yard"]
+keywords = ["rpn", "shunting", "yard"]
 categories = ["algorithms"]
 authors = ["Julian Alberts"]
 description = "A generic shunting yard algorithm implementation"
