@@ -276,12 +276,10 @@ mod tests {
     #[test]
     fn unary_operator_1() {
         // ! true
-        let postfix = unsafe {
-            to_postfix([
-                InputToken::<_, (), _>::Operator(Logical::Not),
-                InputToken::Value(true),
-            ])
-        };
+        let postfix = to_postfix([
+            InputToken::<_, (), _>::Operator(Logical::Not),
+            InputToken::Value(true),
+        ]);
         assert_eq!(
             postfix,
             Ok(vec![
@@ -293,43 +291,37 @@ mod tests {
 
     #[test]
     fn unexpected_closing_paren() {
-        let postfix = unsafe {
-            to_postfix([
-                InputToken::Value(false),
-                InputToken::RightParen,
-                InputToken::Operator(Logical::And),
-                InputToken::<_, (), _>::Operator(Logical::Not),
-                InputToken::Value(true),
-            ])
-        };
+        let postfix = to_postfix([
+            InputToken::Value(false),
+            InputToken::RightParen,
+            InputToken::Operator(Logical::And),
+            InputToken::<_, (), _>::Operator(Logical::Not),
+            InputToken::Value(true),
+        ]);
         assert_eq!(postfix, Err(crate::ParenMissmatchError { pos: 1 }))
     }
 
     #[test]
     fn missing_closing_paren() {
-        let postfix = unsafe {
-            to_postfix([
-                InputToken::Value(false),
-                InputToken::LeftParen,
-                InputToken::Operator(Logical::And),
-                InputToken::<_, (), _>::Operator(Logical::Not),
-                InputToken::Value(true),
-            ])
-        };
+        let postfix = to_postfix([
+            InputToken::Value(false),
+            InputToken::LeftParen,
+            InputToken::Operator(Logical::And),
+            InputToken::<_, (), _>::Operator(Logical::Not),
+            InputToken::Value(true),
+        ]);
         assert_eq!(postfix, Err(crate::ParenMissmatchError { pos: 1 }))
     }
 
     #[test]
     fn unary_operator_2() {
         // false && ! true
-        let postfix = unsafe {
-            to_postfix([
-                InputToken::Value(false),
-                InputToken::Operator(Logical::And),
-                InputToken::<_, (), _>::Operator(Logical::Not),
-                InputToken::Value(true),
-            ])
-        };
+        let postfix = to_postfix([
+            InputToken::Value(false),
+            InputToken::Operator(Logical::And),
+            InputToken::<_, (), _>::Operator(Logical::Not),
+            InputToken::Value(true),
+        ]);
         assert_eq!(
             postfix,
             Ok(vec![
@@ -343,76 +335,64 @@ mod tests {
 
     #[test]
     fn function_call_without_paren() {
-        let postfix1 = unsafe {
-            to_postfix([
-                InputToken::<_, _, Math>::Function("fn"),
-                InputToken::Value(1),
-            ])
-        };
-        let postfix2 = unsafe {
-            to_postfix([
-                InputToken::Function("fn"),
-                InputToken::LeftParen,
-                InputToken::Value(1),
-                InputToken::RightParen,
-            ])
-        };
+        let postfix1 = to_postfix([
+            InputToken::<_, _, Math>::Function("fn"),
+            InputToken::Value(1),
+        ]);
+        let postfix2 = to_postfix([
+            InputToken::Function("fn"),
+            InputToken::LeftParen,
+            InputToken::Value(1),
+            InputToken::RightParen,
+        ]);
         assert_eq!(postfix1, postfix2);
     }
 
     #[test]
     fn function_call_without_paren_multi_arg() {
-        let postfix1 = unsafe {
-            to_postfix([
-                InputToken::<_, _, Math>::Function("fn"),
-                InputToken::Value(1),
-                InputToken::ArgSeperator,
-                InputToken::Value(2),
-                InputToken::Operator(Math::Add),
-                InputToken::Value(2),
-            ])
-        };
-        let postfix2 = unsafe {
-            to_postfix([
-                InputToken::Function("fn"),
-                InputToken::LeftParen,
-                InputToken::Value(1),
-                InputToken::ArgSeperator,
-                InputToken::Value(2),
-                InputToken::Operator(Math::Add),
-                InputToken::Value(2),
-                InputToken::RightParen,
-            ])
-        };
+        let postfix1 = to_postfix([
+            InputToken::<_, _, Math>::Function("fn"),
+            InputToken::Value(1),
+            InputToken::ArgSeperator,
+            InputToken::Value(2),
+            InputToken::Operator(Math::Add),
+            InputToken::Value(2),
+        ]);
+        let postfix2 = to_postfix([
+            InputToken::Function("fn"),
+            InputToken::LeftParen,
+            InputToken::Value(1),
+            InputToken::ArgSeperator,
+            InputToken::Value(2),
+            InputToken::Operator(Math::Add),
+            InputToken::Value(2),
+            InputToken::RightParen,
+        ]);
         assert_eq!(postfix1, postfix2);
     }
 
     #[test]
     fn function_call_without_paren_multi_arg_following_op() {
         // fn 1 , 2 + 2 == fn ( 1 , 2 + 2 )
-        let postfix1 = unsafe {
-            to_postfix([
-                InputToken::<_, _, Math>::Function("fn"),
-                InputToken::Value(1),
-                InputToken::ArgSeperator,
-                InputToken::Value(2),
-                InputToken::Operator(Math::Add),
-                InputToken::Value(2),
-            ])
-        };
+        let postfix1 = to_postfix([
+            InputToken::<_, _, Math>::Function("fn"),
+            InputToken::Value(1),
+            InputToken::ArgSeperator,
+            InputToken::Value(2),
+            InputToken::Operator(Math::Add),
+            InputToken::Value(2),
+        ]);
         // fn ( 1 , 2 ) + 2
-        let postfix2 = unsafe {
-            to_postfix([
-                InputToken::Function("fn"),
-                InputToken::LeftParen,
-                InputToken::Value(1),
-                InputToken::ArgSeperator,
-                InputToken::Value(2),
-                InputToken::RightParen,
-                InputToken::Operator(Math::Add),
-                InputToken::Value(2),
-            ])
-        };
+        let postfix2 = to_postfix([
+            InputToken::Function("fn"),
+            InputToken::LeftParen,
+            InputToken::Value(1),
+            InputToken::ArgSeperator,
+            InputToken::Value(2),
+            InputToken::RightParen,
+            InputToken::Operator(Math::Add),
+            InputToken::Value(2),
+        ]);
         assert_ne!(postfix1, postfix2);
     }
 }
