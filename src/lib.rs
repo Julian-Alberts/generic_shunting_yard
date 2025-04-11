@@ -46,8 +46,14 @@ pub enum InputToken<V, F, O> {
     RightParen,
     /// Any type of function
     Function(F),
-    /// A seperator for function arguments
+    /// A separator for function arguments
+    #[deprecated(
+        since = "0.1.1",
+        note = "Please use ArgSeparator instead. This variant will be removed in 0.2.0"
+    )]
     ArgSeperator,
+    /// A separator for function arguments
+    ArgSeparator,
     /// A operator like "+", "-", ...
     Operator(O),
 }
@@ -129,6 +135,19 @@ impl std::error::Error for ParenMissmatchError {}
 /// ]));
 /// ```
 ///
+///Missing parentheses around function arguments.
+/// ```rust
+/// use gyard::{InputToken, OutputToken, op::Math, to_postfix};
+///
+/// // 5 + f 1, 2 + 2
+/// let infix = [
+///     InputToken::Value(5),
+///     InputToken::Operator(Math::Add),
+///     InputToken::Function("f"),
+///     InputToken::
+/// ]
+/// ```
+///
 pub fn to_postfix<V, F, O>(
     infix: impl IntoIterator<Item = InputToken<V, F, O>>,
 ) -> Result<Vec<OutputToken<V, F, O>>, ParenMissmatchError>
@@ -168,7 +187,8 @@ where
                 }
             }
             InputToken::Function(func) => stack.push(StackToken::Function(func)),
-            InputToken::ArgSeperator => {
+            #[allow(deprecated)]
+            InputToken::ArgSeperator | InputToken::ArgSeparator => {
                 while let Some(StackToken::Operator(_)) = stack.last() {
                     let Some(StackToken::Operator(o)) = stack.pop() else {
                         // SAFETY:
@@ -288,7 +308,7 @@ mod tests {
             InputToken::Function("max"),
             InputToken::LeftParen,
             InputToken::Value(2),
-            InputToken::ArgSeperator,
+            InputToken::ArgSeparator,
             InputToken::Value(3),
             InputToken::RightParen,
             InputToken::Operator(Math::Div),
@@ -392,7 +412,7 @@ mod tests {
         let postfix1 = to_postfix([
             InputToken::<_, _, Math>::Function("fn"),
             InputToken::Value(1),
-            InputToken::ArgSeperator,
+            InputToken::ArgSeparator,
             InputToken::Value(2),
             InputToken::Operator(Math::Add),
             InputToken::Value(2),
@@ -401,7 +421,7 @@ mod tests {
             InputToken::Function("fn"),
             InputToken::LeftParen,
             InputToken::Value(1),
-            InputToken::ArgSeperator,
+            InputToken::ArgSeparator,
             InputToken::Value(2),
             InputToken::Operator(Math::Add),
             InputToken::Value(2),
@@ -416,7 +436,7 @@ mod tests {
         let postfix1 = to_postfix([
             InputToken::<_, _, Math>::Function("fn"),
             InputToken::Value(1),
-            InputToken::ArgSeperator,
+            InputToken::ArgSeparator,
             InputToken::Value(2),
             InputToken::Operator(Math::Add),
             InputToken::Value(2),
@@ -426,7 +446,7 @@ mod tests {
             InputToken::Function("fn"),
             InputToken::LeftParen,
             InputToken::Value(1),
-            InputToken::ArgSeperator,
+            InputToken::ArgSeparator,
             InputToken::Value(2),
             InputToken::RightParen,
             InputToken::Operator(Math::Add),
