@@ -78,6 +78,18 @@ pub enum OutputToken<V, F, O> {
 
 /// Mark any struct or enum as an Operator. Each operator has to define its precedence and if it is
 /// left associative.
+///
+/// ```rust
+/// pub struct MyOp;
+/// impl gyard::Operator for MyOp {
+///     fn precedence(&self) -> usize {
+///         10
+///     }
+///     fn is_left_associative(&self) -> bool {
+///         true
+///     }
+/// }
+/// ```
 pub trait Operator {
     /// Returns the precedence of an operator.
     fn precedence(&self) -> usize;
@@ -113,7 +125,7 @@ impl std::error::Error for ParenMissmatchError {}
 ///
 /// ```rust
 /// use gyard::{InputToken, OutputToken, op::Math, to_postfix};
-/// // 5 + 2 * sin(123)
+/// // 5 + 2 * sin ( 123 )
 /// let infix = [
 ///     InputToken::Value(5),
 ///     InputToken::Operator(Math::Add),
@@ -135,17 +147,59 @@ impl std::error::Error for ParenMissmatchError {}
 /// ]));
 /// ```
 ///
+/// ```rust
+/// use gyard::{InputToken, OutputToken, op::Math, to_postfix};
+///
+/// // 1 + f ( 2 , 3 ) + 4
+/// let infix = [
+///     InputToken::Value(1),
+///     InputToken::Operator(Math::Add),
+///     InputToken::Function("f"),
+///     InputToken::LeftParen,
+///     InputToken::Value(2),
+///     InputToken::ArgSeparator,
+///     InputToken::Value(3),
+///     InputToken::RightParen,
+///     InputToken::Operator(Math::Add),
+///     InputToken::Value(4),
+/// ];
+/// let postfix = to_postfix(infix);
+/// assert_eq!(postfix, Ok(vec![
+///     OutputToken::Value(1),
+///     OutputToken::Value(2),
+///     OutputToken::Value(3),
+///     OutputToken::Function("f"),
+///     OutputToken::Operator(Math::Add),
+///     OutputToken::Value(4),
+///     OutputToken::Operator(Math::Add),
+/// ]));
+/// ```
+///
 ///Missing parentheses around function arguments.
 /// ```rust
 /// use gyard::{InputToken, OutputToken, op::Math, to_postfix};
 ///
-/// // 5 + f 1, 2 + 2
+/// // 1 + f 2 , 3 + 4 == 1 + f ( 2 , 3 + 4 )
 /// let infix = [
-///     InputToken::Value(5),
+///     InputToken::Value(1),
 ///     InputToken::Operator(Math::Add),
 ///     InputToken::Function("f"),
-///     InputToken::
-/// ]
+///     InputToken::Value(2),
+///     InputToken::ArgSeparator,
+///     InputToken::Value(3),
+///     InputToken::Operator(Math::Add),
+///     InputToken::Value(4),
+/// ];
+/// let postfix = to_postfix(infix);
+/// assert_eq!(postfix, Ok(vec![
+///     OutputToken::Value(1),
+///     OutputToken::Value(2),
+///     OutputToken::Value(3),
+///     OutputToken::Value(4),
+///     OutputToken::Operator(Math::Add),
+///     OutputToken::Function("f"),
+///     OutputToken::Operator(Math::Add),
+/// ]));
 /// ```
 ///
 pub fn to_postfix<V, F, O>(

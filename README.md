@@ -29,3 +29,19 @@ The gyard crate is a generic implementation of the shunting yard algorythm with 
      OutputToken::Operator(Math::Add),
  ]));
  ```
+
+You can define your own operators using the `gyard::Operator` trait.
+```rust
+pub struct MyOp;
+impl gyard::Operator for MyOp {
+    fn precedence(&self) -> usize {
+        10
+    }
+    fn is_left_associative(&self) -> bool {
+        true
+    }
+}
+```
+
+Values and functions do not require any special traits.
+
