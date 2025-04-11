@@ -98,6 +98,8 @@ impl std::fmt::Display for ParenMissmatchError {
     }
 }
 
+impl std::error::Error for ParenMissmatchError {}
+
 /// Convert a infix expression into a postfix expression.
 /// It is highly recomended to wrap function arguments in parentheses as the result may be
 /// unexpected otherwise.
@@ -259,15 +261,13 @@ mod tests {
 
     #[test]
     fn precedence_1() {
-        let post_fix = unsafe {
-            to_postfix::<_, (), _>([
-                InputToken::Value(1),
-                InputToken::Operator(Math::Add),
-                InputToken::Value(2),
-                InputToken::Operator(Math::Mul),
-                InputToken::Value(3),
-            ])
-        };
+        let post_fix = to_postfix::<_, (), _>([
+            InputToken::Value(1),
+            InputToken::Operator(Math::Add),
+            InputToken::Value(2),
+            InputToken::Operator(Math::Mul),
+            InputToken::Value(3),
+        ]);
         assert_eq!(
             post_fix,
             Ok(vec![
