@@ -29,9 +29,12 @@
 //!     OutputToken::Operator(Math::Add),
 //! ]));
 //! ```
+#![warn(clippy::allow_attributes_without_reason)]
+#![warn(clippy::missing_safety_doc)]
 #![warn(clippy::undocumented_unsafe_blocks)]
 #![warn(clippy::unnecessary_safety_doc)]
-#![warn(clippy::missing_safety_doc)]
+#![warn(clippy::unwrap_in_result)]
+#![warn(clippy::unwrap_used)]
 #![warn(missing_docs)]
 
 pub mod op;
@@ -241,7 +244,7 @@ where
                 }
             }
             InputToken::Function(func) => stack.push(StackToken::Function(func)),
-            #[allow(deprecated)]
+            #[expect(deprecated, reason = "")]
             InputToken::ArgSeperator | InputToken::ArgSeparator => {
                 while let Some(StackToken::Operator(_)) = stack.last() {
                     let Some(StackToken::Operator(o)) = stack.pop() else {

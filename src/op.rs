@@ -18,7 +18,7 @@ macro_rules! new_op {
     ($ty: ty {$($pat: pat => ($prec: literal, $left: literal),)*} $(into $conv_ty: ident :: $conv_var:ident)?) => {
         impl Operator for $ty {
             fn precedence(&self) -> usize {
-                #[allow(unused)]
+                #[allow(unused, reason = "This import might not be used in the macro")]
                 use $ty::*;
                 match self {
                     $($pat => $prec,)*
@@ -26,7 +26,7 @@ macro_rules! new_op {
             }
 
             fn is_left_associative(&self) -> bool {
-                #[allow(unused)]
+                #[allow(unused, reason = "This import might not be used in the macro")]
                 use $ty::*;
                 match self {
                     $($pat => $left,)*
