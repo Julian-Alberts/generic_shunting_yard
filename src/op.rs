@@ -4,6 +4,16 @@
 
 use crate::Operator;
 
+impl Operator for Box<dyn Operator> {
+    fn precedence(&self) -> usize {
+        self.as_ref().precedence()
+    }
+
+    fn is_left_associative(&self) -> bool {
+        self.as_ref().is_left_associative()
+    }
+}
+
 macro_rules! new_op {
     ($ty: ty {$($pat: pat => ($prec: literal, $left: literal),)*} $(into $conv_ty: ident :: $conv_var:ident)?) => {
         impl Operator for $ty {
