@@ -45,31 +45,39 @@ macro_rules! new_op {
 }
 
 /// Common math operators
-#[allow(missing_docs)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum Math {
+    /// The addition operator
     Add,
+    /// The subtraction operator
     Sub,
+    /// The multiplication operator
     Mul,
+    /// The divison operator
     Div,
+    /// The exponent operator
     Exponent,
 }
 
 /// Common compare operators
-#[allow(missing_docs)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum Compare {
+    /// The less than operator
     Lt,
+    /// The less or equals operator
     Le,
+    /// The equal operator
     Eq,
+    /// The not equal operator
     Ne,
+    /// The greater or equals operator
     Ge,
+    /// The greater than operator
     Gt,
 }
 
 /// Common logical operators
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-#[allow(missing_docs)]
 pub enum Logical {
     Xor,
     And,
@@ -79,10 +87,12 @@ pub enum Logical {
 
 /// All predefined operators
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-#[allow(missing_docs)]
 pub enum All {
+    /// Math operators
     Math(Math),
+    /// Compare operators
     Compare(Compare),
+    /// Logicial operators
     Logical(Logical),
 }
 
