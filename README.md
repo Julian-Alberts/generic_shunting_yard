@@ -42,6 +42,7 @@ impl gyard::Operator for MyOp {
     }
 }
 ```
+The default operator implementations use the precedence defined in JavaScript.
 
 Values and functions do not require any special traits.
 
