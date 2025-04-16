@@ -222,33 +222,24 @@ where
             InputToken::RightParen if paren_count == 0 => return Err(ParenMissmatchError { pos }),
             InputToken::RightParen => {
                 paren_count -= 1;
-                while let Some(StackToken::Operator(_)) = stack.last() {
-                    let Some(StackToken::Operator(op)) = stack.pop() else {
-                        // SAFETY:
-                        // This has been checked in the while condition
-                        unsafe { std::hint::unreachable_unchecked() }
-                    };
+                while let Some(StackToken::Operator(op)) =
+                    stack.pop_if(|token| matches!(token, StackToken::Operator(_)))
+                {
                     out_queue.push(OutputToken::Operator(op))
                 }
                 stack.pop();
-                if let Some(StackToken::Function(_)) = stack.last() {
-                    let Some(StackToken::Function(func)) = stack.pop() else {
-                        // SAFETY:
-                        // This has been checked in the if condition
-                        unsafe { std::hint::unreachable_unchecked() }
-                    };
+                if let Some(StackToken::Function(func)) =
+                    stack.pop_if(|token| matches!(token, StackToken::Function(_)))
+                {
                     out_queue.push(OutputToken::Function(func));
                 }
             }
             InputToken::Function(func) => stack.push(StackToken::Function(func)),
             #[allow(deprecated)]
             InputToken::ArgSeperator | InputToken::ArgSeparator => {
-                while let Some(StackToken::Operator(_)) = stack.last() {
-                    let Some(StackToken::Operator(o)) = stack.pop() else {
-                        // SAFETY:
-                        // This has been checked in the while condition
-                        unsafe { std::hint::unreachable_unchecked() }
-                    };
+                while let Some(StackToken::Operator(o)) =
+                    stack.pop_if(|token| matches!(token, StackToken::Operator(_)))
+                {
                     out_queue.push(OutputToken::Operator(o))
                 }
             }
