@@ -96,6 +96,24 @@ pub enum All {
     Logical(Logical),
 }
 
+impl Operator for All {
+    fn precedence(&self) -> usize {
+        match self {
+            All::Math(math) => math.precedence(),
+            All::Compare(compare) => compare.precedence(),
+            All::Logical(logical) => logical.precedence(),
+        }
+    }
+
+    fn is_left_associative(&self) -> bool {
+        match self {
+            All::Math(math) => math.is_left_associative(),
+            All::Compare(compare) => compare.is_left_associative(),
+            All::Logical(logical) => logical.is_left_associative(),
+        }
+    }
+}
+
 new_op!(Math {
     Add | Sub => (11, true),
     Mul | Div => (12, true),
