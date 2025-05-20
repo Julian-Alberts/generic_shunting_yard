@@ -79,9 +79,13 @@ pub enum Compare {
 /// Common logical operators
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum Logical {
+    /// The xor than operator
     Xor,
+    /// The and than operator
     And,
+    /// The or than operator
     Or,
+    /// The not than operator
     Not,
 }
 
